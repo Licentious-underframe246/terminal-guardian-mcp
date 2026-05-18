@@ -1,0 +1,49 @@
+{
+  "workspace": {
+    "rootDir": ".",
+    "allowedPaths": [".", "./src", "./tests", "./docs"],
+    "maxFileSize": 10485760,
+    "maxFilesPerOperation": 100
+  },
+  "execution": {
+    "timeout": 30000,
+    "maxOutputSize": 1048576,
+    "maxConcurrentProcesses": 5,
+    "shell": "auto"
+  },
+  "security": {
+    "enableRiskAnalysis": true,
+    "blockDangerousCommands": true,
+    "requireConfirmationForWarnings": true,
+    "allowSudo": false,
+    "allowNetworkCommands": true,
+    "customBlocklist": [],
+    "customAllowlist": []
+  },
+  "rateLimit": {
+    "enabled": true,
+    "maxRequestsPerMinute": 60,
+    "maxRequestsPerHour": 500
+  },
+  "docker": {
+    "enabled": false,
+    "socketPath": "/var/run/docker.sock",
+    "allowContainerRestart": false,
+    "allowLogAccess": true
+  },
+  "git": {
+    "enabled": true,
+    "allowPush": false,
+    "allowCommit": false,
+    "maxLogEntries": 50
+  },
+  "logging": {
+    "enabled": true,
+    "level": "info",
+    "logDir": "./logs",
+    "logCommands": true,
+    "logOutputs": false,
+    "logSecurityEvents": true,
+    "prettyPrint": false
+  }
+}

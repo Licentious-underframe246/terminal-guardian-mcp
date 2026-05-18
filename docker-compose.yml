@@ -1,0 +1,22 @@
+services:
+  terminal-guardian:
+    build: .
+    image: terminal-guardian-mcp:latest
+    container_name: terminal-guardian
+    restart: unless-stopped
+    volumes:
+      - ./workspace:/app/workspace:ro
+      - ./logs:/app/logs
+      - ./terminal-guardian.config.json:/app/terminal-guardian.config.json:ro
+      # Mount Docker socket for Docker tool support (optional)
+      # - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - GUARDIAN_CONFIG=/app/terminal-guardian.config.json
+      - NODE_ENV=production
+    stdin_open: true
+    tty: false
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
