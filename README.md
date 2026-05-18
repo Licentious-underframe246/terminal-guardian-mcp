@@ -7,7 +7,7 @@
 **Secure, sandboxed terminal access for AI assistants via the Model Context Protocol**
 
 [![CI](https://github.com/7Majesty-M/terminal-guardian-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/7Majesty-M/terminal-guardian-mcp/actions)
-[![npm version](https://badge.fury.io/js/terminal-guardian-mcp.svg)](https://badge.fury.io/js/terminal-guardian-mcp)
+[![npm version](https://img.shields.io/npm/v/terminal-guardian-mcp)](https://www.npmjs.com/package/terminal-guardian-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org)
