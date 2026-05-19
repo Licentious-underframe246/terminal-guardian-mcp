@@ -14,7 +14,6 @@ import {
   ListToolsRequestSchema,
   type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
-
 import { loadConfig } from './config/loader.js';
 import { initLogger, getLogger } from './logging/logger.js';
 import { TerminalExecutor } from './tools/executor.js';
@@ -37,7 +36,12 @@ import {
   GitStatusSchema,
   GitDiffSchema,
   GitLogSchema,
+  ListProcessesSchema,
+  KillProcessSchema,
+  GetEnvSchema,
 } from './tools/schemas.js';
+import { listProcesses, killProcess } from './tools/processManager.js';
+import { EnvManager } from './system/envManager.js';
 
 // ─── Bootstrap ───────────────────────────────────────────────
 const config = loadConfig(process.env['GUARDIAN_CONFIG']);
@@ -48,6 +52,7 @@ const filesystem = new FilesystemManager(config.workspace);
 const docker = new DockerManager(config.docker);
 const git = new GitManager(config.git, config.workspace.rootDir);
 const rateLimiter = new RateLimiter(config.rateLimit);
+const envManager = new EnvManager();
 
 logger.info({ version: '1.0.0', workspace: config.workspace.rootDir }, 'Terminal Guardian MCP starting');
 
@@ -186,6 +191,47 @@ const TOOLS: Tool[] = [
       },
     },
   },
+  {
+    name: 'list_processes',
+    description:
+      'List running system processes with CPU, memory usage, and command info. Supports filtering by name and sorting.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filter: { type: 'string', description: 'Filter by process name or command' },
+        sortBy: { type: 'string', enum: ['cpu', 'memory', 'pid', 'name'], description: 'Sort order (default: cpu)' },
+        limit: { type: 'number', description: 'Max results (default: 50)' },
+      },
+    },
+  },
+  {
+    name: 'kill_process',
+    description:
+      'Terminate a process by PID. Uses SIGTERM by default (graceful). SIGKILL requires confirmed=true. System processes are protected.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        pid: { type: 'number', description: 'PID of the process to terminate' },
+        signal: { type: 'string', enum: ['SIGTERM', 'SIGKILL', 'SIGINT', 'SIGHUP'], description: 'Signal (default: SIGTERM)' },
+        confirmed: { type: 'boolean', description: 'Required for SIGKILL' },
+      },
+      required: ['pid'],
+    },
+  },
+  {
+    name: 'get_env',
+    description:
+      'Read environment variables with automatic secret masking. Secrets (tokens, passwords, keys) are shown as masked values like "sk**...xy". Never reveals raw secret values.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        filter: { type: 'string', description: 'Filter by key name substring' },
+        category: { type: 'string', enum: ['secret', 'path', 'system', 'runtime', 'app', 'unknown'] },
+        keys: { type: 'array', items: { type: 'string' }, description: 'Fetch specific keys' },
+        includeMasked: { type: 'boolean', description: 'Include masked secrets (default: true)' },
+      },
+    },
+  },
 ];
 
 // ─── Server ───────────────────────────────────────────────────
@@ -312,6 +358,50 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       }
 
+      case 'list_processes': {
+        const input = ListProcessesSchema.parse(safeArgs);
+        const procs = listProcesses({
+          filter: input.filter,
+          sortBy: input.sortBy,
+          limit: input.limit,
+        });
+        result = {
+          success: true,
+          data: procs,
+          metadata: { count: procs.length, platform: process.platform },
+        };
+        break;
+      }
+
+      case 'kill_process': {
+        const input = KillProcessSchema.parse(safeArgs);
+
+        // SIGKILL requires explicit confirmation
+        if (input.signal === 'SIGKILL' && !input.confirmed) {
+          result = {
+            success: false,
+            error: 'SIGKILL requires confirmed=true — it forcefully kills the process without cleanup. Use SIGTERM first.',
+          };
+          break;
+        }
+
+        const killResult = killProcess(input.pid, input.signal);
+        result = { success: killResult.success, data: killResult };
+        break;
+      }
+
+      case 'get_env': {
+        const input = GetEnvSchema.parse(safeArgs);
+        const envResult = envManager.getVariables({
+          filter: input.filter,
+          category: input.category,
+          keys: input.keys,
+          includeMasked: input.includeMasked,
+        });
+        result = { success: true, data: envResult };
+        break;
+      }
+      
       // ── Git ───────────────────────────────────────────────
       case 'git_status': {
         const input = GitStatusSchema.parse(safeArgs);

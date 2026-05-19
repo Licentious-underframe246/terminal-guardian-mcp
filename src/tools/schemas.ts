@@ -131,7 +131,6 @@ export const GitLogSchema = z.object({
     .describe('Maximum number of commits to return'),
 });
 
-// Type exports
 export type RunCommandInput = z.infer<typeof RunCommandSchema>;
 export type AnalyzeCommandInput = z.infer<typeof AnalyzeCommandSchema>;
 export type ListFilesInput = z.infer<typeof ListFilesSchema>;
@@ -144,3 +143,69 @@ export type DockerRestartInput = z.infer<typeof DockerRestartSchema>;
 export type GitStatusInput = z.infer<typeof GitStatusSchema>;
 export type GitDiffInput = z.infer<typeof GitDiffSchema>;
 export type GitLogInput = z.infer<typeof GitLogSchema>;
+
+// ── Process Management ────────────────────────────────────────
+
+export const ListProcessesSchema = z.object({
+  filter: z
+    .string()
+    .optional()
+    .describe('Filter processes by name or command substring'),
+  sortBy: z
+    .enum(['cpu', 'memory', 'pid', 'name'])
+    .optional()
+    .default('cpu')
+    .describe('Sort order (default: cpu)'),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(500)
+    .optional()
+    .default(50)
+    .describe('Max number of processes to return (default: 50)'),
+});
+
+export const KillProcessSchema = z.object({
+  pid: z
+    .number()
+    .int()
+    .min(1)
+    .describe('PID of the process to terminate'),
+  signal: z
+    .enum(['SIGTERM', 'SIGKILL', 'SIGINT', 'SIGHUP'])
+    .optional()
+    .default('SIGTERM')
+    .describe('Signal to send (default: SIGTERM — graceful shutdown)'),
+  confirmed: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe('Required for SIGKILL — force kill without cleanup'),
+});
+
+// ── Environment Variables ─────────────────────────────────────
+
+export const GetEnvSchema = z.object({
+  filter: z
+    .string()
+    .optional()
+    .describe('Filter variables by key name substring (e.g. "NODE")'),
+  category: z
+    .enum(['secret', 'path', 'system', 'runtime', 'app', 'unknown'])
+    .optional()
+    .describe('Filter by variable category'),
+  keys: z
+    .array(z.string())
+    .optional()
+    .describe('Fetch specific variables by exact key name'),
+  includeMasked: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe('Include secret variables (shown masked). Default: true'),
+});
+
+export type ListProcessesInput = z.infer<typeof ListProcessesSchema>;
+export type KillProcessInput = z.infer<typeof KillProcessSchema>;
+export type GetEnvInput = z.infer<typeof GetEnvSchema>;
