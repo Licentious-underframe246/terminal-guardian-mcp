@@ -1,19 +1,19 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/7Majesty-M/terminal-guardian-mcp/main/docs/assets/banner.png" alt="Terminal Guardian MCP" width="100%" />
+<img src="https://raw.githubusercontent.com/yourusername/terminal-guardian-mcp/main/docs/assets/banner.png" alt="Terminal Guardian MCP" width="100%" />
 
 # Terminal Guardian MCP
 
 **Secure, sandboxed terminal access for AI assistants via the Model Context Protocol**
 
-[![CI](https://github.com/7Majesty-M/terminal-guardian-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/7Majesty-M/terminal-guardian-mcp/actions)
-[![npm version](https://img.shields.io/npm/v/terminal-guardian-mcp)](https://www.npmjs.com/package/terminal-guardian-mcp)
+[![CI](https://github.com/yourusername/terminal-guardian-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/terminal-guardian-mcp/actions)
+[![npm version](https://badge.fury.io/js/terminal-guardian-mcp.svg)](https://badge.fury.io/js/terminal-guardian-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org)
 [![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io)
 
-[Features](#features) · [Quick Start](#quick-start) · [Claude Desktop](#claude-desktop-integration) · [Tools](#mcp-tools) · [Security](#security-philosophy) · [Configuration](#configuration) · [Roadmap](#roadmap)
+[Features](#features) · [Quick Start](#quick-start) · [Claude Desktop](#claude-desktop-integration) · [Tools](#mcp-tools) · [Security](#security-philosophy) · [Configuration](#configuration) · [Windows](#windows-support) · [Roadmap](#roadmap)
 
 </div>
 
@@ -51,6 +51,22 @@ Every command passes through a multi-layer safety analysis before execution:
 - SIGTERM → SIGKILL escalation for hanging processes
 - Working directory isolation within workspace root
 - Output size limits to prevent memory exhaustion
+- Cross-platform: auto-detects bash, sh, PowerShell, or cmd
+
+### 🔎 Process Management
+- List all running processes with CPU, memory, PID, and command
+- Filter by name or command substring, sort by CPU / memory / PID / name
+- Terminate processes by PID with signal control (SIGTERM / SIGKILL / SIGINT / SIGHUP)
+- Protected PID list — system processes (init, systemd, launchd, PID 0/1) can never be killed
+- SIGKILL requires `confirmed: true` as an additional safety gate
+
+### 🔐 Environment Variables
+- Inspect environment variables with **automatic secret masking**
+- Secrets are never revealed in full — shown as `sk**...xy` format
+- Auto-detects secrets by key name (`API_KEY`, `TOKEN`, `PASSWORD`, `DATABASE_URL`, `SECRET`, ...)
+- Auto-detects secrets by value shape (base64 blobs, JWTs, GitHub/Stripe/Slack/OpenAI tokens)
+- Filter by key name, category (`secret`, `path`, `system`, `runtime`, `unknown`), or fetch specific keys
+- Safe to use even in projects with `.env` files loaded at runtime
 
 ### 📁 Filesystem Access
 - File listing, reading, and content search
@@ -101,7 +117,7 @@ npm install -g terminal-guardian-mcp
 ### Install from source
 
 ```bash
-git clone https://github.com/7Majesty-M/terminal-guardian-mcp.git
+git clone https://github.com/yourusername/terminal-guardian-mcp.git
 cd terminal-guardian-mcp
 npm install
 npm run build
@@ -160,7 +176,11 @@ After saving, **restart Claude Desktop**. You should see Terminal Guardian appea
 
 ## MCP Tools
 
-### `run_command`
+Terminal Guardian exposes **14 tools** across 5 domains.
+
+### Terminal
+
+#### `run_command`
 Execute a shell command with full safety analysis.
 
 ```json
@@ -195,7 +215,7 @@ Execute a shell command with full safety analysis.
 }
 ```
 
-### `analyze_command`
+#### `analyze_command`
 Analyze a command without running it.
 
 ```json
@@ -214,76 +234,148 @@ Analyze a command without running it.
 }
 ```
 
-### `list_files`
-List directory contents.
+### Processes
 
+#### `list_processes`
+List running system processes sorted by CPU, memory, PID, or name.
+
+```json
+{
+  "filter": "node",
+  "sortBy": "memory",
+  "limit": 20
+}
+```
+
+**Returns:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "pid": 12345,
+      "ppid": 1,
+      "name": "node",
+      "command": "node dist/index.js",
+      "cpu": 2.4,
+      "memory": 52428800,
+      "status": "S",
+      "user": "dev",
+      "started": "10:30"
+    }
+  ],
+  "metadata": { "count": 3, "platform": "linux" }
+}
+```
+
+#### `kill_process`
+Terminate a process by PID. System processes are always protected.
+
+```json
+{
+  "pid": 12345,
+  "signal": "SIGTERM"
+}
+```
+
+> Use `"signal": "SIGKILL"` with `"confirmed": true` for force kill.
+
+**Returns:**
+```json
+{
+  "success": true,
+  "data": { "pid": 12345, "signal": "SIGTERM", "success": true }
+}
+```
+
+### Environment
+
+#### `get_env`
+Read environment variables with automatic secret masking.
+
+```json
+{ "filter": "NODE" }
+```
+
+Fetch specific keys:
+```json
+{ "keys": ["NODE_ENV", "PORT", "DATABASE_URL"] }
+```
+
+**Returns:**
+```json
+{
+  "success": true,
+  "data": {
+    "total": 3,
+    "masked": 1,
+    "visible": 2,
+    "categories": { "runtime": 2, "secret": 1, "path": 0, "system": 0, "app": 0, "unknown": 0 },
+    "variables": [
+      { "key": "NODE_ENV",     "value": "production", "masked": false, "category": "runtime" },
+      { "key": "PORT",         "value": "3000",        "masked": false, "category": "unknown" },
+      { "key": "DATABASE_URL", "value": "po**...db",   "masked": true,  "category": "secret"  }
+    ]
+  }
+}
+```
+
+Secret masking examples:
+
+| Original value | Shown as |
+|----------------|----------|
+| `sk-proj-abc123...xyz` | `sk**...yz` |
+| `postgres://user:pass@host/db` | `po**...db` |
+| `eyJhbGci...` (JWT) | `ey**...` |
+| `ab` (too short) | `****` |
+
+### Filesystem
+
+#### `list_files`
 ```json
 { "path": "./src", "recursive": true }
 ```
 
-### `read_file`
-Read a file's content.
-
+#### `read_file`
 ```json
 { "path": "./src/index.ts" }
 ```
 
-### `search_files`
-Search for text across files.
-
+#### `search_files`
 ```json
-{
-  "query": "TODO",
-  "path": "./src",
-  "pattern": "**/*.ts"
-}
+{ "query": "TODO", "path": "./src", "pattern": "**/*.ts" }
 ```
 
-### `docker_ps`
-List Docker containers.
+### Docker *(requires `docker.enabled: true`)*
 
+#### `docker_ps`
 ```json
 { "all": true }
 ```
 
-### `docker_logs`
-Fetch container logs.
-
+#### `docker_logs`
 ```json
-{
-  "container": "my-app",
-  "tail": 200,
-  "timestamps": true
-}
+{ "container": "my-app", "tail": 200, "timestamps": true }
 ```
 
-### `docker_stats`
-Get container resource usage.
-
+#### `docker_stats`
 ```json
 { "container": "my-app" }
 ```
 
-### `git_status`
-Get repository status.
+### Git
 
+#### `git_status`
 ```json
 { "path": "." }
 ```
 
-### `git_diff`
-View file changes.
-
+#### `git_diff`
 ```json
-{
-  "staged": false,
-  "file": "src/api.ts"
-}
+{ "staged": false, "file": "src/api.ts" }
 ```
 
-### `git_log`
-View commit history.
-
+#### `git_log`
 ```json
 { "limit": 20 }
 ```
@@ -295,17 +387,20 @@ View commit history.
 ```
 terminal-guardian-mcp/
 ├── src/
-│   ├── index.ts              # MCP server entrypoint & tool routing
+│   ├── index.ts              # MCP server entrypoint & tool routing (14 tools)
 │   ├── types/
 │   │   └── index.ts          # Shared TypeScript types
 │   ├── config/
 │   │   └── loader.ts         # Config file loading with deep merge
 │   ├── security/
-│   │   ├── riskAnalyzer.ts   # Multi-layer command risk analysis
+│   │   ├── riskAnalyzer.ts   # Multi-layer command risk analysis engine
 │   │   └── rateLimiter.ts    # Per-minute/hour request throttling
 │   ├── tools/
-│   │   ├── executor.ts       # Shell command execution engine
+│   │   ├── executor.ts       # Cross-platform shell execution engine
+│   │   ├── processManager.ts # Process listing and safe termination
 │   │   └── schemas.ts        # Zod input validation schemas
+│   ├── system/
+│   │   └── envManager.ts     # Env vars with automatic secret masking
 │   ├── filesystem/
 │   │   └── manager.ts        # Safe file access with path enforcement
 │   ├── docker/
@@ -314,20 +409,23 @@ terminal-guardian-mcp/
 │   │   └── manager.ts        # Git operations via child_process
 │   └── logging/
 │       └── logger.ts         # Pino-based structured logging
-├── tests/                    # Vitest unit tests
-├── .github/workflows/        # CI/CD pipeline
-├── Dockerfile                # Multi-stage production image
-├── docker-compose.yml        # Development compose file
-└── terminal-guardian.config.json
+├── tests/                    # Vitest unit tests (79 tests)
+├── .github/workflows/        # CI/CD pipeline (Node 18/20/22)
+├── Dockerfile                # Multi-stage build, non-root user
+├── docker-compose.yml
+├── terminal-guardian.config.json
+└── README.md
 ```
 
 ### Design Principles
 
 - **Security First**: Risk analysis runs before every command, not as an afterthought
 - **Least Privilege**: Docker disabled, git write-operations disabled, sudo blocked by default
+- **Never Reveal Secrets**: Env vars masked at read time — raw values never reach the AI context
 - **Transparency**: Every action is logged with full context
 - **Defense in Depth**: Multiple independent safety layers (blocklist → pattern analysis → rate limit → output limits)
 - **Type Safety**: Strict TypeScript + Zod runtime validation on all tool inputs
+- **Cross-Platform**: Auto-detects the right shell on Linux, macOS, and Windows
 
 ---
 
@@ -347,7 +445,7 @@ Create `terminal-guardian.config.json` in your project root (or specify via `GUA
     "timeout": 30000,
     "maxOutputSize": 1048576,
     "maxConcurrentProcesses": 5,
-    "shell": "/bin/bash"
+    "shell": "auto"
   },
   "security": {
     "enableRiskAnalysis": true,
@@ -395,6 +493,7 @@ Create `terminal-guardian.config.json` in your project root (or specify via `GUA
 | `workspace.maxFileSize` | `10485760` | Max readable file size in bytes (10MB) |
 | `execution.timeout` | `30000` | Default command timeout in ms |
 | `execution.maxOutputSize` | `1048576` | Max stdout+stderr size in bytes (1MB) |
+| `execution.shell` | `"auto"` | Shell — `"auto"` detects bash/pwsh/sh automatically |
 | `security.allowSudo` | `false` | Whether sudo commands are permitted |
 | `security.customBlocklist` | `[]` | Additional regex patterns to always block |
 | `security.customAllowlist` | `[]` | Patterns that bypass risk analysis |
@@ -421,6 +520,7 @@ Terminal Guardian operates on a **deny-by-default** model with explicit allowlis
 - Recursive deletions of any path
 - Docker container stop/kill/remove
 - Force kills (`kill -9`, `killall`)
+- `kill_process` with `SIGKILL` signal
 - Permission modifications (`chmod`, `chown`)
 - Git destructive operations (`reset --hard`, `push`)
 - Service management (`systemctl stop`)
@@ -431,6 +531,8 @@ Terminal Guardian operates on a **deny-by-default** model with explicit allowlis
 - Docker read operations: `ps`, `images`, `inspect`
 - npm read operations: `list`, `outdated`, `audit`
 - System info: `whoami`, `uptime`, `df`, `uname`
+- `list_processes` — read-only, never modifies state
+- `get_env` — secrets masked before they leave the module
 
 ### Threat model
 - **AI hallucination safety**: Blocks commands that an AI might suggest incorrectly
@@ -438,6 +540,39 @@ Terminal Guardian operates on a **deny-by-default** model with explicit allowlis
 - **Supply chain protection**: Blocks pipe-to-shell patterns (`curl | bash`)
 - **Privilege escalation**: sudo blocked by default, must be explicitly allowed per-deployment
 - **Data exfiltration**: Output size limits, no secret logging by default
+- **Secret leakage**: Env vars masked at read time — raw values never reach the AI context
+
+---
+
+## Windows Support
+
+Terminal Guardian auto-detects the available shell at startup — no manual configuration needed.
+
+| Platform | Default Shell | Fallback |
+|----------|--------------|---------|
+| Linux / macOS | `/bin/bash` | `/bin/sh` |
+| Windows | `pwsh` (PowerShell Core) | `cmd.exe` |
+
+### Windows quick start
+
+```bash
+# Option 1: PowerShell Core (recommended)
+winget install Microsoft.PowerShell
+
+# Option 2: WSL — shell auto-detects, no config change needed
+
+# Option 3: Git Bash — set path explicitly
+```
+
+```json
+{
+  "execution": {
+    "shell": "C:\\Program Files\\Git\\bin\\bash.exe"
+  }
+}
+```
+
+> **Note**: On Windows without WSL, Unix commands like `ls`, `grep`, `cat` require PowerShell equivalents (`Get-ChildItem`, `Select-String`, `Get-Content`) or Git Bash.
 
 ---
 
@@ -463,28 +598,13 @@ The container runs as a non-root user (`guardian:guardian`) with a read-only roo
 ## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Start in watch mode
-npm run dev
-
-# Run tests
-npm test
-
-# Run tests with coverage
+npm install          # Install dependencies
+npm run dev          # Start in watch mode
+npm test             # Run tests
 npm run test:coverage
-
-# Type checking
 npm run typecheck
-
-# Lint
 npm run lint
-
-# Format
 npm run format
-
-# Build for production
 npm run build
 ```
 
@@ -494,49 +614,78 @@ npm run build
 
 ### With Claude Desktop
 
-Once configured, you can ask Claude:
-
 > "Check the git status of my project and tell me what files have changed"
+
+> "Which process is eating the most CPU right now?"
+
+> "Show me all environment variables related to Node — but keep secrets masked"
 
 > "Run the test suite and show me any failures"
 
-> "List the Docker containers that are currently running and check if the database container is healthy"
+> "There's a hung process using 4GB of RAM — find it and kill it gracefully"
 
-> "Search my codebase for all TODO comments and summarize them"
-
-> "What's the current branch and how many commits ahead of origin are we?"
+> "List Docker containers and check if the database is healthy"
 
 ### Tool call examples
 
 **Safe command:**
 ```
 User: Run `ls -la` in the src directory
-Claude: [calls run_command with {"command": "ls -la", "cwd": "src"}]
+Claude: [calls run_command {"command": "ls -la", "cwd": "src"}]
 → Returns file listing immediately (SAFE level)
 ```
 
 **Command requiring confirmation:**
 ```
 User: Clean up the dist directory
-Claude: [calls analyze_command first, sees WARNING]
-        "This command (rm -rf ./dist) requires confirmation. It will recursively delete the dist directory. Should I proceed?"
-User: Yes, go ahead
+Claude: [calls analyze_command, sees WARNING]
+        "rm -rf ./dist requires confirmation — it will recursively delete dist/. Proceed?"
+User: Yes
 Claude: [calls run_command with confirmed: true]
 ```
 
 **Blocked command:**
 ```
 User: Run rm -rf /
-Claude: [calls run_command, gets BLOCKED response]
-        "I cannot execute this command. Terminal Guardian has blocked it because it would recursively delete the entire root filesystem. This is an unconditionally blocked operation."
+Claude: [run_command returns BLOCKED]
+        "Terminal Guardian has blocked this — it would delete the entire root filesystem."
+```
+
+**Process management:**
+```
+User: Something is using all my memory
+Claude: [calls list_processes {"sortBy": "memory", "limit": 5}]
+        "Top consumer: 'chrome' at PID 8821, using 2.1GB. Want me to kill it?"
+User: Yes
+Claude: [calls kill_process {"pid": 8821, "signal": "SIGTERM"}]
+        "Sent SIGTERM to PID 8821 — chrome terminated."
+```
+
+**Environment inspection:**
+```
+User: What's my Node version and runtime environment?
+Claude: [calls get_env {"filter": "NODE"}]
+        "NODE_ENV=production, NODE_VERSION=20.11.0.
+         DATABASE_URL and API_KEY are also present — values masked for security."
 ```
 
 ---
 
 ## Roadmap
 
-- [ ] **v1.1** — Process management tools (`list_processes`, `kill_process`)
-- [ ] **v1.1** — Environment variable inspection (with secret masking)
+### Released
+
+- [x] **v1.0** — Secure terminal execution with risk analysis engine
+- [x] **v1.0** — Filesystem access with path traversal protection
+- [x] **v1.0** — Git repository analysis (status, diff, log, branches)
+- [x] **v1.0** — Docker integration (ps, logs, stats, restart)
+- [x] **v1.0** — Session logging, rate limiting, configurable security
+- [x] **v1.0** — Cross-platform shell auto-detection (Linux / macOS / Windows)
+- [x] **v1.1** — Process management (`list_processes`, `kill_process`)
+- [x] **v1.1** — Environment variable inspection with automatic secret masking
+
+### Planned
+
 - [ ] **v1.2** — Docker container exec with sandbox isolation
 - [ ] **v1.2** — Network diagnostics (`ping`, `curl` with output limits)
 - [ ] **v1.3** — AI-powered commit message generation via git diff analysis
@@ -551,19 +700,13 @@ Claude: [calls run_command, gets BLOCKED response]
 
 ## Contributing
 
-Contributions are welcome! Please read through the existing issues before opening new ones.
-
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m 'feat: add my feature'`
-4. Push to the branch: `git push origin feature/my-feature`
+3. Commit: `git commit -m 'feat: add my feature'`
+4. Push: `git push origin feature/my-feature`
 5. Open a Pull Request
 
-Please ensure:
-- All tests pass (`npm test`)
-- TypeScript compiles without errors (`npm run typecheck`)
-- Code is formatted (`npm run format`)
-- New security patterns have corresponding test cases
+Please ensure all tests pass, TypeScript compiles, and new security patterns have test coverage.
 
 ---
 
@@ -585,40 +728,6 @@ MIT © [Terminal Guardian Contributors](LICENSE)
 
 Built with ❤️ for the AI infrastructure community
 
-**[⭐ Star this project](https://github.com/7Majesty-M/terminal-guardian-mcp)** if it's useful to you
+**[⭐ Star this project](https://github.com/yourusername/terminal-guardian-mcp)** if it's useful to you
 
 </div>
-
----
-
-## Windows Support
-
-Terminal Guardian auto-detects the available shell at startup — no manual configuration needed.
-
-| Platform | Default Shell | Fallback |
-|----------|--------------|---------|
-| Linux / macOS | `/bin/bash` | `/bin/sh` |
-| Windows | `pwsh` (PowerShell Core) | `cmd.exe` |
-
-### Windows quick start
-
-```bash
-# Option 1: PowerShell Core (recommended)
-winget install Microsoft.PowerShell
-
-# Option 2: WSL (run bash natively)
-# No config change needed — shell auto-detects
-
-# Option 3: Git Bash
-# Set in terminal-guardian.config.json:
-```
-
-```json
-{
-  "execution": {
-    "shell": "C:\\Program Files\\Git\\bin\\bash.exe"
-  }
-}
-```
-
-> **Note**: On Windows without WSL, Unix commands like `ls`, `grep`, `cat` require PowerShell equivalents (`Get-ChildItem`, `Select-String`, `Get-Content`) or Git Bash.
