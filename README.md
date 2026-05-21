@@ -66,7 +66,13 @@ Every command passes through a multi-layer safety analysis before execution:
 - Auto-detects secrets by key name (`API_KEY`, `TOKEN`, `PASSWORD`, `DATABASE_URL`, `SECRET`, ...)
 - Auto-detects secrets by value shape (base64 blobs, JWTs, GitHub/Stripe/Slack/OpenAI tokens)
 - Filter by key name, category (`secret`, `path`, `system`, `runtime`, `unknown`), or fetch specific keys
-- Safe to use even in projects with `.env` files loaded at runtime
+
+### 🌐 Network Diagnostics
+- **Ping** — check host reachability and measure round-trip latency, cross-platform
+- **HTTP requests** — GET/POST/PUT/PATCH/DELETE/HEAD with headers, body, redirect control; response body capped at 512KB
+- **DNS lookup** — resolve hostnames via `dig` → `nslookup` → Node.js DNS fallback
+- Private/loopback addresses blocked by default (`127.x`, `10.x`, `192.168.x`, `::1`, link-local)
+- Only `http://` and `https://` allowed — `file://`, `ftp://`, `ldap://` and others are blocked
 
 ### 📁 Filesystem Access
 - File listing, reading, and content search
@@ -78,6 +84,7 @@ Every command passes through a multi-layer safety analysis before execution:
 - List and inspect containers
 - Read container logs with timestamp support
 - Real-time resource stats (CPU, memory, network, block I/O)
+- Execute commands inside containers (`docker_exec`) with confirmation gate
 - Container restart with confirmation gate
 - Disabled by default — opt-in via config
 
@@ -176,7 +183,7 @@ After saving, **restart Claude Desktop**. You should see Terminal Guardian appea
 
 ## MCP Tools
 
-Terminal Guardian exposes **14 tools** across 5 domains.
+Terminal Guardian exposes **18 tools** across 6 domains.
 
 ### Terminal
 
@@ -240,53 +247,17 @@ Analyze a command without running it.
 List running system processes sorted by CPU, memory, PID, or name.
 
 ```json
-{
-  "filter": "node",
-  "sortBy": "memory",
-  "limit": 20
-}
-```
-
-**Returns:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "pid": 12345,
-      "ppid": 1,
-      "name": "node",
-      "command": "node dist/index.js",
-      "cpu": 2.4,
-      "memory": 52428800,
-      "status": "S",
-      "user": "dev",
-      "started": "10:30"
-    }
-  ],
-  "metadata": { "count": 3, "platform": "linux" }
-}
+{ "filter": "node", "sortBy": "memory", "limit": 20 }
 ```
 
 #### `kill_process`
 Terminate a process by PID. System processes are always protected.
 
 ```json
-{
-  "pid": 12345,
-  "signal": "SIGTERM"
-}
+{ "pid": 12345, "signal": "SIGTERM" }
 ```
 
-> Use `"signal": "SIGKILL"` with `"confirmed": true` for force kill.
-
-**Returns:**
-```json
-{
-  "success": true,
-  "data": { "pid": 12345, "signal": "SIGTERM", "success": true }
-}
-```
+> `"signal": "SIGKILL"` requires `"confirmed": true`.
 
 ### Environment
 
@@ -294,29 +265,20 @@ Terminate a process by PID. System processes are always protected.
 Read environment variables with automatic secret masking.
 
 ```json
-{ "filter": "NODE" }
-```
-
-Fetch specific keys:
-```json
 { "keys": ["NODE_ENV", "PORT", "DATABASE_URL"] }
 ```
 
 **Returns:**
 ```json
 {
-  "success": true,
-  "data": {
-    "total": 3,
-    "masked": 1,
-    "visible": 2,
-    "categories": { "runtime": 2, "secret": 1, "path": 0, "system": 0, "app": 0, "unknown": 0 },
-    "variables": [
-      { "key": "NODE_ENV",     "value": "production", "masked": false, "category": "runtime" },
-      { "key": "PORT",         "value": "3000",        "masked": false, "category": "unknown" },
-      { "key": "DATABASE_URL", "value": "po**...db",   "masked": true,  "category": "secret"  }
-    ]
-  }
+  "total": 3,
+  "masked": 1,
+  "visible": 2,
+  "variables": [
+    { "key": "NODE_ENV",     "value": "production", "masked": false, "category": "runtime" },
+    { "key": "PORT",         "value": "3000",        "masked": false, "category": "unknown" },
+    { "key": "DATABASE_URL", "value": "po**...db",   "masked": true,  "category": "secret"  }
+  ]
 }
 ```
 
@@ -328,6 +290,71 @@ Secret masking examples:
 | `postgres://user:pass@host/db` | `po**...db` |
 | `eyJhbGci...` (JWT) | `ey**...` |
 | `ab` (too short) | `****` |
+
+### Network
+
+#### `ping`
+Check host reachability and measure latency.
+
+```json
+{ "host": "api.github.com", "count": 4 }
+```
+
+**Returns:**
+```json
+{
+  "host": "api.github.com",
+  "reachable": true,
+  "transmitted": 4,
+  "received": 4,
+  "packetLoss": 0,
+  "minMs": 12.4,
+  "avgMs": 14.1,
+  "maxMs": 16.8
+}
+```
+
+#### `http_request`
+Make an HTTP/HTTPS request.
+
+```json
+{
+  "url": "https://api.github.com/repos/octocat/hello-world",
+  "method": "GET",
+  "headers": { "Accept": "application/json" }
+}
+```
+
+**Returns:**
+```json
+{
+  "statusCode": 200,
+  "statusText": "OK",
+  "headers": { "content-type": "application/json; charset=utf-8" },
+  "body": "...",
+  "bodyTruncated": false,
+  "durationMs": 320,
+  "redirectCount": 0
+}
+```
+
+#### `dns_lookup`
+Resolve a hostname to IP addresses.
+
+```json
+{ "host": "github.com" }
+```
+
+**Returns:**
+```json
+{
+  "host": "github.com",
+  "addresses": [
+    { "type": "A", "value": "140.82.121.4" }
+  ],
+  "queryTimeMs": 18
+}
+```
 
 ### Filesystem
 
@@ -363,6 +390,17 @@ Secret masking examples:
 { "container": "my-app" }
 ```
 
+#### `docker_exec`
+Execute a command inside a running container. Requires `confirmed: true`.
+
+```json
+{
+  "container": "my-app",
+  "command": ["node", "--version"],
+  "confirmed": true
+}
+```
+
 ### Git
 
 #### `git_status`
@@ -387,7 +425,7 @@ Secret masking examples:
 ```
 terminal-guardian-mcp/
 ├── src/
-│   ├── index.ts              # MCP server entrypoint & tool routing (14 tools)
+│   ├── index.ts              # MCP server entrypoint & tool routing (18 tools)
 │   ├── types/
 │   │   └── index.ts          # Shared TypeScript types
 │   ├── config/
@@ -401,15 +439,17 @@ terminal-guardian-mcp/
 │   │   └── schemas.ts        # Zod input validation schemas
 │   ├── system/
 │   │   └── envManager.ts     # Env vars with automatic secret masking
+│   ├── network/
+│   │   └── diagnostics.ts    # Ping, HTTP requests, DNS lookup
 │   ├── filesystem/
 │   │   └── manager.ts        # Safe file access with path enforcement
 │   ├── docker/
-│   │   └── manager.ts        # Dockerode integration (optional)
+│   │   └── manager.ts        # Dockerode integration + container exec
 │   ├── git/
 │   │   └── manager.ts        # Git operations via child_process
 │   └── logging/
 │       └── logger.ts         # Pino-based structured logging
-├── tests/                    # Vitest unit tests (79 tests)
+├── tests/                    # Vitest unit tests (108 tests)
 ├── .github/workflows/        # CI/CD pipeline (Node 18/20/22)
 ├── Dockerfile                # Multi-stage build, non-root user
 ├── docker-compose.yml
@@ -419,13 +459,14 @@ terminal-guardian-mcp/
 
 ### Design Principles
 
-- **Security First**: Risk analysis runs before every command, not as an afterthought
-- **Least Privilege**: Docker disabled, git write-operations disabled, sudo blocked by default
-- **Never Reveal Secrets**: Env vars masked at read time — raw values never reach the AI context
-- **Transparency**: Every action is logged with full context
-- **Defense in Depth**: Multiple independent safety layers (blocklist → pattern analysis → rate limit → output limits)
-- **Type Safety**: Strict TypeScript + Zod runtime validation on all tool inputs
-- **Cross-Platform**: Auto-detects the right shell on Linux, macOS, and Windows
+- **Security First** — risk analysis runs before every command, not as an afterthought
+- **Least Privilege** — Docker disabled, git write-ops disabled, sudo blocked by default
+- **Never Reveal Secrets** — env vars masked at read time, raw values never reach the AI context
+- **Network Boundaries** — private/internal addresses blocked, only http/https allowed
+- **Transparency** — every action is logged with full context
+- **Defense in Depth** — blocklist → pattern analysis → rate limit → output limits
+- **Type Safety** — strict TypeScript + Zod runtime validation on all tool inputs
+- **Cross-Platform** — auto-detects the right shell on Linux, macOS, and Windows
 
 ---
 
@@ -437,7 +478,7 @@ Create `terminal-guardian.config.json` in your project root (or specify via `GUA
 {
   "workspace": {
     "rootDir": "/home/user/projects",
-    "allowedPaths": ["/home/user/projects", "/home/user/projects/src"],
+    "allowedPaths": ["/home/user/projects"],
     "maxFileSize": 10485760,
     "maxFilesPerOperation": 100
   },
@@ -453,8 +494,8 @@ Create `terminal-guardian.config.json` in your project root (or specify via `GUA
     "requireConfirmationForWarnings": true,
     "allowSudo": false,
     "allowNetworkCommands": true,
-    "customBlocklist": ["curl.*my-internal-secret.*"],
-    "customAllowlist": ["sudo systemctl restart nginx"]
+    "customBlocklist": [],
+    "customAllowlist": []
   },
   "rateLimit": {
     "enabled": true,
@@ -506,41 +547,46 @@ Create `terminal-guardian.config.json` in your project root (or specify via `GUA
 
 ## Security Philosophy
 
-Terminal Guardian operates on a **deny-by-default** model with explicit allowlisting:
+Terminal Guardian operates on a **deny-by-default** model with explicit allowlisting.
 
-### What is always blocked
-- Recursive filesystem deletion targeting system paths (`rm -rf /`)
+### Always blocked
+- Recursive filesystem deletion of system paths (`rm -rf /`)
 - Fork bombs (`:(){:|:&};:`)
 - System power management (`shutdown`, `reboot`, `halt`)
 - Filesystem formatting (`mkfs`, `wipefs`, `dd of=/dev/`)
-- Reverse shells and TCP redirections
+- Reverse shells and TCP redirections (`/dev/tcp/`)
 - `chmod 777 /` and similar root-level permission changes
+- `file://`, `ftp://`, `ldap://` URL schemes in HTTP requests
+- Private/loopback addresses in network tools
 
-### What requires confirmation
-- Recursive deletions of any path
+### Requires confirmation
+- Recursive deletions (`rm -rf ./anything`)
 - Docker container stop/kill/remove
-- Force kills (`kill -9`, `killall`)
-- `kill_process` with `SIGKILL` signal
+- Docker container exec (`docker_exec`)
+- Force kills — `kill_process` with `SIGKILL`
 - Permission modifications (`chmod`, `chown`)
 - Git destructive operations (`reset --hard`, `push`)
 - Service management (`systemctl stop`)
 
-### What is always safe
-- Read-only commands: `ls`, `cat`, `grep`, `find`
+### Always safe
+- Read-only shell commands: `ls`, `cat`, `grep`, `find`
 - Git inspection: `status`, `log`, `diff`, `branch`
-- Docker read operations: `ps`, `images`, `inspect`
+- Docker read operations: `ps`, `images`, `inspect`, `stats`, `logs`
 - npm read operations: `list`, `outdated`, `audit`
 - System info: `whoami`, `uptime`, `df`, `uname`
 - `list_processes` — read-only, never modifies state
 - `get_env` — secrets masked before they leave the module
+- `dns_lookup` — read-only DNS query
+- `ping` to public hosts
 
 ### Threat model
-- **AI hallucination safety**: Blocks commands that an AI might suggest incorrectly
-- **Prompt injection defense**: Rate limiting and explicit confirmation prevent automation abuse
-- **Supply chain protection**: Blocks pipe-to-shell patterns (`curl | bash`)
-- **Privilege escalation**: sudo blocked by default, must be explicitly allowed per-deployment
-- **Data exfiltration**: Output size limits, no secret logging by default
-- **Secret leakage**: Env vars masked at read time — raw values never reach the AI context
+- **AI hallucination safety** — blocks commands an AI might suggest incorrectly
+- **Prompt injection defense** — rate limiting and explicit confirmation prevent automation abuse
+- **Supply chain protection** — blocks pipe-to-shell patterns (`curl | bash`)
+- **Privilege escalation** — sudo blocked by default
+- **Secret leakage** — env vars masked at read time, raw values never reach AI context
+- **SSRF protection** — private network ranges blocked in all network tools
+- **Data exfiltration** — output size limits, no secret logging by default
 
 ---
 
@@ -572,22 +618,15 @@ winget install Microsoft.PowerShell
 }
 ```
 
-> **Note**: On Windows without WSL, Unix commands like `ls`, `grep`, `cat` require PowerShell equivalents (`Get-ChildItem`, `Select-String`, `Get-Content`) or Git Bash.
+> **Note**: On Windows without WSL, Unix commands like `ls`, `grep`, `cat` require PowerShell equivalents or Git Bash.
 
 ---
 
 ## Docker Usage
 
-Build and run the server in Docker:
-
 ```bash
-# Build image
 docker build -t terminal-guardian-mcp .
-
-# Run with docker-compose
 docker-compose up -d
-
-# View logs
 docker-compose logs -f terminal-guardian
 ```
 
@@ -598,14 +637,14 @@ The container runs as a non-root user (`guardian:guardian`) with a read-only roo
 ## Development
 
 ```bash
-npm install          # Install dependencies
-npm run dev          # Start in watch mode
-npm test             # Run tests
-npm run test:coverage
-npm run typecheck
-npm run lint
-npm run format
-npm run build
+npm install           # Install dependencies
+npm run dev           # Start in watch mode
+npm test              # Run tests
+npm run test:coverage # Coverage report
+npm run typecheck     # TypeScript check
+npm run lint          # ESLint
+npm run format        # Prettier
+npm run build         # Production build
 ```
 
 ---
@@ -618,7 +657,13 @@ npm run build
 
 > "Which process is eating the most CPU right now?"
 
-> "Show me all environment variables related to Node — but keep secrets masked"
+> "Show me all environment variables related to Node — keep secrets masked"
+
+> "Is api.github.com reachable? What's the latency?"
+
+> "Make a GET request to https://api.github.com/zen and show me the response"
+
+> "What IPs does github.com resolve to?"
 
 > "Run the test suite and show me any failures"
 
@@ -626,47 +671,52 @@ npm run build
 
 > "List Docker containers and check if the database is healthy"
 
+> "Run `node --version` inside the api container"
+
 ### Tool call examples
 
 **Safe command:**
 ```
 User: Run `ls -la` in the src directory
 Claude: [calls run_command {"command": "ls -la", "cwd": "src"}]
-→ Returns file listing immediately (SAFE level)
+→ Returns file listing immediately (SAFE)
 ```
 
-**Command requiring confirmation:**
+**Confirmation required:**
 ```
 User: Clean up the dist directory
-Claude: [calls analyze_command, sees WARNING]
-        "rm -rf ./dist requires confirmation — it will recursively delete dist/. Proceed?"
+Claude: [calls analyze_command → WARNING]
+        "rm -rf ./dist requires confirmation. Proceed?"
 User: Yes
 Claude: [calls run_command with confirmed: true]
 ```
 
-**Blocked command:**
+**Blocked:**
 ```
 User: Run rm -rf /
-Claude: [run_command returns BLOCKED]
-        "Terminal Guardian has blocked this — it would delete the entire root filesystem."
+Claude: "Terminal Guardian has blocked this — it would delete the root filesystem."
 ```
 
-**Process management:**
+**Network check:**
 ```
-User: Something is using all my memory
-Claude: [calls list_processes {"sortBy": "memory", "limit": 5}]
-        "Top consumer: 'chrome' at PID 8821, using 2.1GB. Want me to kill it?"
-User: Yes
-Claude: [calls kill_process {"pid": 8821, "signal": "SIGTERM"}]
-        "Sent SIGTERM to PID 8821 — chrome terminated."
+User: Is my API server reachable?
+Claude: [calls ping {"host": "api.myapp.com", "count": 3}]
+        "api.myapp.com is reachable. Avg latency: 24ms, 0% packet loss."
 ```
 
-**Environment inspection:**
+**Env inspection:**
 ```
-User: What's my Node version and runtime environment?
+User: What's my runtime environment?
 Claude: [calls get_env {"filter": "NODE"}]
         "NODE_ENV=production, NODE_VERSION=20.11.0.
-         DATABASE_URL and API_KEY are also present — values masked for security."
+         DATABASE_URL and API_KEY are present — values masked for security."
+```
+
+**Docker exec:**
+```
+User: Check the Node version inside the api container
+Claude: [calls docker_exec {"container": "api", "command": ["node", "--version"], "confirmed": true}]
+        "v20.11.0"
 ```
 
 ---
@@ -683,11 +733,11 @@ Claude: [calls get_env {"filter": "NODE"}]
 - [x] **v1.0** — Cross-platform shell auto-detection (Linux / macOS / Windows)
 - [x] **v1.1** — Process management (`list_processes`, `kill_process`)
 - [x] **v1.1** — Environment variable inspection with automatic secret masking
+- [x] **v1.2** — Network diagnostics (`ping`, `http_request`, `dns_lookup`)
+- [x] **v1.2** — Docker container exec (`docker_exec`) with confirmation gate
 
 ### Planned
 
-- [ ] **v1.2** — Docker container exec with sandbox isolation
-- [ ] **v1.2** — Network diagnostics (`ping`, `curl` with output limits)
 - [ ] **v1.3** — AI-powered commit message generation via git diff analysis
 - [ ] **v1.3** — Workspace templates for common project types
 - [ ] **v1.4** — WebSocket transport support (alongside stdio)
@@ -706,7 +756,7 @@ Claude: [calls get_env {"filter": "NODE"}]
 4. Push: `git push origin feature/my-feature`
 5. Open a Pull Request
 
-Please ensure all tests pass, TypeScript compiles, and new security patterns have test coverage.
+Please ensure all tests pass, TypeScript compiles cleanly, and new security patterns have test coverage.
 
 ---
 
