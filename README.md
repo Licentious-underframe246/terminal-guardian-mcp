@@ -2,6 +2,15 @@
 
 <img src="https://raw.githubusercontent.com/7Majesty-M/terminal-guardian-mcp/main/docs/assets/banner.png" alt="Terminal Guardian MCP" width="100%" />
 
+## 🎬 Live Demo
+
+<img src="./docs/assets/demo.gif" alt="Terminal Guardian Demo" width="100%" />
+
+</div>
+
+> 💡 Demo shows the core analysis engine. In real use, this runs automatically
+> when Claude executes terminal commands via MCP — no CLI needed.
+
 # Terminal Guardian MCP
 
 **Secure, sandboxed terminal access for AI assistants via the Model Context Protocol**
